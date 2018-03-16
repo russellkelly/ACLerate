@@ -1,0 +1,12 @@
+[
+    {
+	"command":"delete-acl",
+	"name":"ACLerate-ACL-test13",
+	"type":"IPv4",
+	"interface":"Ethernet13",
+	"direction":"in",
+	"operation":"attach",
+	"rules":"/mnt/flash/ACLerate-rules.json",
+	"counting":"Yes"
+    }
+]
