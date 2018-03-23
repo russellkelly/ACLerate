@@ -1,9 +1,10 @@
 # ACLerate
 EOS SDK agent to program ACLs with thousands of rules quickly and efficiently
 
-
+## Objective
 Applying an ACL that contains thousands of rules to a switch via the CLI or eAPI may be impractical due to the excessive time taken to process the ACL.  ACLerate aims to provide a solution to this problem by leveraging EOS SDK to allow large ACLs to be programmed more quickly and efficiently.
 
+## Overview
 ACLerate is started and stopped using the conventional CLI for executing EOS SDK daemons. As shown in Figure 1, the main way the client communicates with ACLerate is via JSON files.  JSON is chosen as it is a popular, flexible and lightweight means of describing the information that is required for ACLerate to handle the client’s request.  The two types of JSON files needed are: 
 * configuration file 
   * contains an array with each element corresponding to an ACL and containing information that
@@ -22,5 +23,7 @@ ACLerate is started and stopped using the conventional CLI for executing EOS SDK
 
 ACLerate uses inotify to track any changes to the ACLerate configuration file.  Upon being notified that this file has been modified, ACLerate will parse the JSON therein and attempt to execute the command specified, accessing the rules description file as/when necessary using the data in the referenced file.
 
-<img src="ACLerate_Overview.jpg" alt="Drawing"  height="800" width="700">
+<img src="ACLerate_Overview.jpg" alt="Drawing"  height="800" width="600">
 Figure 1: Overview of ACLerate
+
+## JSON Objects
