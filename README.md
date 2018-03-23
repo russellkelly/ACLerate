@@ -21,3 +21,5 @@ ACLerate is started and stopped using the conventional CLI for executing EOS SDK
   * may be referenced by multiple configuration files, i.e. it is legitimate for the same rules description file to be associated with different ACLs (e.g. to conveniently facilitate applying the same rules to different interfaces or directions).
 
 ACLerate uses inotify to track any changes to the ACLerate configuration file.  Upon being notified that this file has been modified, ACLerate will parse the JSON therein and attempt to execute the command specified, accessing the rules description file as/when necessary using the data in the referenced file.
+
+<img src="ACLerate_Overview.jpg" alt="Drawing"  height="600" width="300">
