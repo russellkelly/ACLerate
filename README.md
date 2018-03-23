@@ -27,3 +27,18 @@ ACLerate uses inotify to track any changes to the ACLerate configuration file.  
 Figure 1: Overview of ACLerate
 
 ## JSON Objects
+### Configuration File
+The ACLerate configuration file contains a JSON array each element of which contains information about an ACL. This information includes the ACL nam, typee and the command the client wishes to execute.  These commands, listed below, define what JSON attributes are mandatory and which are optional:
+* add-rule
+  * add rules in the rules description file
+  * if ACL does not exist, it is created and all the rules added (i.e. there is no explicit command to create an ACL)
+  * if ACL exists, any existing rules (based on the rule number)  will be overwritten and any new rules will be added
+* delete-rule
+  * delete rules in the rules description file
+  * if ACL does not exist, error
+  * if ACL exists but does not contain rule, no op
+* delete-acl
+  * delete ACL and all constituent rules
+  * if ACL does not exist, no op
+
+The JSON objects in the ACLerate configuration file are described in the following table:
