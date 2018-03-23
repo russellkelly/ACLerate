@@ -6,7 +6,8 @@
 #Thereofore, it processes the ACLs defined in exactly the same JSON files
 #that ACLerate uses.  After processing these, it uses eAPI to send the
 #commands to the switch, timing how long it takes for the ACL to be
-#programmed.
+#programmed.  The results are printed suitably delimited into a file
+#for convenient processing in Excel.
 
 import json
 import sys
@@ -20,6 +21,8 @@ def main():
 
     #Run script locally rather than remotely to make comparison fairer
     switch = Server("unix:/var/run/command-api.sock")
+
+    start_time = time.time()
 
     #Use the same config file used as ACLerate 
     try:
@@ -41,6 +44,8 @@ def main():
         counting = acl_config.get("counting")
         #Simply doing some testing so need to sanity check these values
 
+        #For deletes, simply send the command to the switch and move on to
+        #next ACL, i.e. no need to be concerned with interfaces, rules etc.
         if command.lower() == "delete-acl":
             sys.stderr.write("About to delete ACL %s\n" % name)
             response = switch.runCmds( 1,[ "enable", "configure", "no ip access-list " + name])
@@ -74,11 +79,13 @@ def main():
             #Simply doing some testing so need to sanity check these values
 
             #Compose the config for this rule and append to rules list
-            rule_cmd = "%d %s ip host %s any log" % (number, action, source)
+            #Rules used for initial testing similar to
+            #"2 permit TCP host 192.168.1.2 host 167.98.10.233 log"
+            rule_cmd = "%d %s %s host %s host %s log" % (number, action, protocol, source, destination)
             rules_cmd_list.append(rule_cmd)
 
         #Time stamp before communicating with switch    
-        send_commands = time.time()
+        parsing_time = time.time()
 
         #Now send command to create ACL followed by all the rule commands to the switch
         response = switch.runCmds( 1, ["enable", "configure", "ip access-list " + name] + rules_cmd_list)
@@ -88,17 +95,28 @@ def main():
         response = switch.runCmds( 1, ["enable", "configure", "interface " + interface,
                                        "ip access-group " + name + " " + direction])
         print response
-
         #Re-visit......
         #Error check response?  (Currently verifying success using show commands.)
         #Basically assuming these are commands are synchronous?  Need to verify
         #guarantees made by runCmds()
 
         #Time stamp after switch responds
-        received_response = time.time()
+        response_time = time.time()
 
-        elapsed_time = received_response - send_commands
-        sys.stderr.write("Overall time is %s\n" % elapsed_time)
+        parsing_duration = parsing_time - start_time
+        hw_processing_duration = response_time - parsing_time
+        overall_duration = response_time - start_time
+
+        sys.stderr.write("Number of rules is %s\n" % str(index+1))
+        sys.stderr.write("Parsing duration is %s\n" % parsing_duration)
+        sys.stderr.write("HW processing duration is is %s\n" % hw_processing_duration)
+        sys.stderr.write("Overall duration is %s\n" % overall_duration)
+
+        #Now print append to file; delimiters "," for easy Excel processing
+        results = "%d, %s, %s, %s\n" % (index+1, parsing_duration, hw_processing_duration, overall_duration)
+        f = open('eAPI-results.txt', 'a+')
+        f.write(results)
+
 
 if __name__ == '__main__':
    sys.exit( main() )

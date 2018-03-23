@@ -2,31 +2,34 @@
 # Copyright (c) 2018 Arista Networks, Inc.  All rights reserved.
 # Arista Networks, Inc. Confidential and Proprietary.
 
-#This script is used to generate a rules JSON description file with
-#thousands of rules for testing ACLerate.
+#This script is used to generate a an exemplar rules description
+#JSON file with potentially thousands of rules for testing ACLerate.
+#The number of rules is passed in as the argument.
 
 import json
 import netaddr
+import sys
 
-rule_count = 2500
-base_ip_address = 3232235777 #192.168.1.1
-#base_ip_address = 3232267009 #192.168.123.1
+#Rule count input as argument
+rule_count = int(sys.argv[1])
 
+#Arbitrary initial source and destination addresses
+base_src_ip_addr = 3232235777 #192.168.1.1
+base_dest_ip_addr = 2808220394 #167.98.10.234
 
-#List of rules
+#Populate list of rules
 rules = []
 for j in range (rule_count):
     rule = {}
     rule["number"] = j+1
-    rule["source"] = str(netaddr.IPAddress(base_ip_address + j))
-    rule["action"] = "deny"
+    rule["source"] = str(netaddr.IPAddress(base_src_ip_addr + j))
+    rule["destination"] = str(netaddr.IPAddress(base_dest_ip_addr - j))
+    rule["action"] = "permit"
+    rule["protocol"] = "TCP"
     rule["log"] = "true"
 
-    #Simple minimalistic rules used for initial testing, e.g.
-    #"2 deny ip host 192.168.1.2 any log"
-    #Will be interesting to use more complex rules for
-    #further testing, especially as the rule's complexity
-    #apparently impacts the TCAM utilisation.
+    #Rules used for initial testing similar to
+    #"2 permit TCP host 192.168.1.2 host 167.98.10.233 log"
 
     rules.append(rule)
 

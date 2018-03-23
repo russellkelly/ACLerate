@@ -221,8 +221,8 @@ class ACLerate(eossdk.AgentHandler, eossdk.AclHandler,
       #processing time by timestamping here.  Should really
       #start the measurement from when the ACL info sent to SDK.
       #But better to under-promise.....
-      begin_processing = time.time()
-      self.start_time = begin_processing
+      start_time = time.time()
+      self.start_time = start_time
       
       #Attempt to parse ACLerate_config_file 
       try:
@@ -405,6 +405,11 @@ class ACLerate(eossdk.AgentHandler, eossdk.AclHandler,
               if command.lower() == "add-rule":
                   self.acl_mgr.acl_rule_set(acl_key, int(number), acl_rule)
 
+          parsing_time = time.time()
+          self.parsing_time = parsing_time
+
+          self.rule_count = index+1
+
           #Now call commit to actually push changes to HW.
           self.acl_mgr.acl_commit()
 
@@ -415,11 +420,9 @@ class ACLerate(eossdk.AgentHandler, eossdk.AclHandler,
               if operation.lower() == "detach":                 
                   self.acl_mgr.acl_apply(acl_key, intf_id, sdk_direction, False)
 
-          applied_acl = time.time()
+          self.parsing_duration = parsing_time - start_time
 
-          overall_time = applied_acl - begin_processing
-
-          sys.stderr.write("Overall time to process ACL %s is %s\n" % (name, overall_time))
+          sys.stderr.write("Time to parse config files for ACL %s is %s\n" % (name, self.parsing_duration))
 
    # An interface has been specified so verify that it exists and is usable.
    # Also check that the accompanying parameters are valid.  If both true then
@@ -454,15 +457,26 @@ class ACLerate(eossdk.AgentHandler, eossdk.AclHandler,
    def on_acl_sync(self):
        self.sync_time = time.time()
 
+       sys.stderr.write("Number of rules is %s\n" % str(self.rule_count))
+
        #Need to be careful of timestamping here when there are multiple ACLs etc
        #Should perhaps verify the ACL name in question?  Remove before production.
-       elapsed_time = self.sync_time - self.start_time
-       sys.stderr.write("Overall time to sync is %s\n" % elapsed_time)
+       hw_processing_duration = self.sync_time - self.parsing_time
+       sys.stderr.write("HW processing duration is is %s\n" % hw_processing_duration)
+
+       overall_duration = self.sync_time - self.start_time
+       sys.stderr.write("Overall duration is %s\n" % overall_duration)
+
+       #Now print append to file; delimiters "," for easy Excel processing.
+       #Used for performance evaluation; remove before production.
+       results = "%d, %s, %s, %s\n" % (self.rule_count, self.parsing_duration, hw_processing_duration, overall_duration)
+       f = open('/mnt/flash/ACLerate-results.txt', 'a+')
+       f.write(results)
 
    # Called if a problem stopped ACL configuration from being committed.
    # e.g. because the TCAM is full
    def on_acl_sync_fail(self, linecard, message):
-       sys.stderr.write("Entering on_acl_sync_fail(): %s -> %s\n" % (linecard, message))
+       sys.stderr.write("Failure applying ACL to HW: %s, %s\n" % (linecard, message))
 
       
 def main():
