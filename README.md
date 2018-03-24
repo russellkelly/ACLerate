@@ -42,3 +42,14 @@ The ACLerate configuration file contains a JSON array each element of which cont
   * if ACL does not exist, no op
 
 The JSON objects in the ACLerate configuration file are described in the following table:
+
+Attribute  | Mandatory | Description | Comment
+------------- | ------------- | ------------- | -------------
+name  | Yes | ACL name | Must be unique.  Must not contain invalid characters, e.g. "/", ".", " " etc
+command | Yes | Command to execute on ACL | Must be “add-rule”, “delete-rule” or “delete-acl"
+type  | Yes | ACL type | Must be “IPv4”, “IPv6” or “MAC”.  Note only IPv4 ACLs currently supported
+interface | No | Interface to which ACL should be attached or detached | Should be included only if client wishes to attach or detach ACL to/from interface
+operation | No | Should ACL be attached or detached to/from interface? | Must be “attach” or “detach”.  Must be present if interface is present
+direction | No | Direction to which ACL should be applied | Must be “in” or “out”. Must be present if interface is present
+rules | No | Identifies file containing rules associated with ACL | Rules description file may be omitted only when ACL is being deleted
+counting | No | Count the number of packets matching each rule in the ACL? | Must be “yes” or “no”.  Default is "no"
