@@ -43,7 +43,7 @@ The ACLerate configuration file contains a JSON array each element of which cont
 
 The JSON objects in the ACLerate configuration file are described in the following table:
 
-Attribute  | Mandatory | Description | Comment
+Attribute  | Mandatory? | Description | Comment
 ------------- | ------------- | ------------- | -------------
 name  | Yes | ACL name | Must be unique.  Must not contain invalid characters, e.g. "/", ".", " " etc
 command | Yes | Command to execute on ACL | Must be “add-rule”, “delete-rule” or “delete-acl"
@@ -53,3 +53,15 @@ operation | No | Should ACL be attached or detached to/from interface? | Must be
 direction | No | Direction to which ACL should be applied | Must be “in” or “out”. Must be present if interface is present
 rules | No | Identifies file containing rules associated with ACL | Rules description file may be omitted only when ACL is being deleted
 counting | No | Count the number of packets matching each rule in the ACL? | Must be “yes” or “no”.  Default is "no"
+
+### Rules Description File
+The rule description files contains an array of information about the rules associated with the ACL.  It is expected that this array could contain multiple thousand elements.  The information for each rule is described in the following table:
+
+Attribute  | Mandatory? | Description | Comment
+------------- | ------------- | ------------- | -------------
+number  | Yes | Rule sequence number | Used to identify rule when deleting, overwriting or adding rule
+source | No | Source address | Either source or destination must be present if adding or overwriting rule.  Neither needed for deleting the rule
+destination | No | Destination address | Either source or destination must be present if adding or overwriting rule.  Neither needed for deleting the rule.
+action | No | Action to be taken for matching packets | Must be “permit” or “deny”.  Must be present for adding or overwriting rules.  May be omitted for deletes.
+protocol | No | IP or MAC protocol of interest | Only certain protocols currently supported
+log | No | Should matching packets be logged? | Must be “yes” or “no”.  Default is "no"
