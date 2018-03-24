@@ -55,7 +55,7 @@ rules | No | Identifies file containing rules associated with ACL | Rules descri
 counting | No | Count the number of packets matching each rule in the ACL? | Must be “yes” or “no”.  Default is "no"
 
 ### Rules Description File
-The rule description files contains an array of information about the rules associated with the ACL.  It is expected that this array could contain multiple thousand elements.  The information for each rule is described in the following table:
+The rules description files contains an array of information about the rules associated with the ACL.  It is expected that this array could contain multiple thousand elements.  The information for each rule is described in the following table:
 
 Attribute  | Mandatory? | Description | Comment
 ------------- | ------------- | ------------- | -------------
@@ -65,3 +65,22 @@ destination | No | Destination address | Either source or destination must be pr
 action | No | Action to be taken for matching packets | Must be “permit” or “deny”.  Must be present for adding or overwriting rules.  May be omitted for deletes.
 protocol | No | IP or MAC protocol of interest | Only certain protocols currently supported
 log | No | Should matching packets be logged? | Must be “yes” or “no”.  Default is "no"
+
+## Usage Instructions
+1. Copy the ACLerate script to the switch using
+```scp ACLerate.py <user name>@<switch IP address>:/mnt/flash```
+2. Configure the ACLerate script to interact with Sysdb by dropping into bash on the switch and executing	
+```sudo cp  /usr/lib/SysdbMountProfiles/EosSdkAll /usr/lib/SysdbMountProfiles/ACLerate```.
+Then edit ```/usr/lib/SysdbMountProfiles/ACLerate```, changing first line to containing ```agentName:ACLerate-%sliceId```
+3. Start the ACLerate daemon using the conventional EOS daemon CLI.
+```	configure ```
+```daemon ACLerate ```
+```exec /mnt/flash/ACLerate.py ```
+```no shut```
+4. Create the rules description file (with the JSON describing the rules to be initially added to the ACL) and copy to the switch.
+5. Create the configuration file which describes the ACL to be created and copy to  ```/mnt/flash/ACLerate-config.json```.  This file should reference the file in (4).  (Note that this step must happen after (4) but actually both (4) and (5) may be done before ACLerate is actually started, i.e. before (1-3).)
+6. Verify that ACLerate has processed the configuration and rules description files correctly and created the desired ACL on the switch by using “show” commands.  However, it should be noted that since this ACL was not created using the CLI, it will not appear in the running configuration.  Therefore, the ACL is visible only via ACL or platform “show” commands.
+7. The configuration file and the rules file can be updated to add new rules, delete rules, overwrite rules, delete the ACL or even add additional ACLs etc.  ACLerate should automatically detect any changes to the configuration file and respond accordingly.
+
+## Debugging Instructions
+
