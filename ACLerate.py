@@ -149,8 +149,8 @@ def direction_convert(direction):
 # Class for handling inotify events.
 # The different event handlers will be called when the file being watched,
 # the ACLerate configuration file (/mnt/flash/ACLerate-config.json), changes
-# on the disk.  Respond to this file's modification or creation by
-# calling the function to process its content.
+# on the disk.  Respond to this file's modification by calling the function
+# to process its content.
 class InotifyHandler(pyinotify.ProcessEvent):
    parent = None
 
@@ -162,8 +162,7 @@ class InotifyHandler(pyinotify.ProcessEvent):
        self.parent.process_config()
 
    def process_IN_CREATE(self, event):
-       sys.stderr.write("Processing %s which has just been created\n" % ACLerate_config_file)
-       self.parent.process_config()
+       sys.stderr.write("ACLerate config file, %s, created\n" % ACLerate_config_file)
 
    def process_IN_DELETE(self, event):
        sys.stderr.write("ACLerate config file, %s, deleted\n" % ACLerate_config_file)
@@ -268,7 +267,7 @@ class ACLerate(eossdk.AgentHandler, eossdk.AclHandler,
               #Now call commit to actually push changes to HW.
               self.acl_mgr.acl_commit()
               continue
- 
+
           #Next, if an interface is specified, verify it actually exists
           #and correct parameters have been specified
           if interface:
