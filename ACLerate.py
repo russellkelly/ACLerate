@@ -268,6 +268,7 @@ class ACLerate(eossdk.AgentHandler, eossdk.AclHandler,
               self.acl_mgr.acl_commit()
               continue
 
+          intf_id = None
           #Next, if an interface is specified, verify it actually exists
           #and correct parameters have been specified
           if interface:
