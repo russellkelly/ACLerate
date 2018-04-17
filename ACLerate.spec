@@ -12,14 +12,9 @@ URL:     http://www.arista.com
 %global ACLerate_root /opt/%{name}
 %global sysdbprofile_root /usr/lib/SysdbMountProfiles
 
-#BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 Requires:  python2
-Requires:  python2-pam
 Requires:  Eos-release
-#Requires:  nginx
-#Requires:  uwsgi
-#Requires:  Eos-release >= 2:4.14.5
 
 %description
 Arista EOS SDK agent to program large ACLs quickly and efficiently
@@ -29,12 +24,12 @@ Arista EOS SDK agent to program large ACLs quickly and efficiently
 
 %install
 %{__rm} -rf %{buildroot}
-%{__install} -m 0644 ACLerate %{buildroot}%{ACLerate_root}/SysdbProfiles/ACLerate
-%{__install} -m 0644 ACLerate.pyc %{buildroot}%{python_sitelib}/ACLerate.pyc
-%{__install} -m 0755 src %{buildroot}%{ACLerate_root}/src
-%{__install} -m 0644 README.pdf %{buildroot}%{ACLerate_root}/doc/README.pdf
-%{__install} -m 0644 LICENSE %{buildroot}%{ACLerate_root}/doc/LICENSE
-
+%{__install} -m 0644 -D ACLerate %{buildroot}%{ACLerate_root}/SysdbProfiles/ACLerate
+%{__install} -m 0644 -D ACLerate.pyc %{buildroot}%{python_sitelib}/ACLerate.pyc
+%{__install} -m 0644 -D README.pdf %{buildroot}%{ACLerate_root}/doc/README.pdf
+%{__install} -m 0644 -D LICENSE %{buildroot}%{ACLerate_root}/doc/LICENSE
+%{__mkdir} %{buildroot}/%{_bindir}
+%{__install} -m 0755 -D ACLerate.py %{buildroot}/%{_bindir}/ACLerate
 
 %clean
 %{__rm} -rf %{buildroot}
@@ -82,10 +77,9 @@ exit 0
 %files
 %defattr(-,root,eosadmin,-)
 %{python_sitelib}/ACLerate.pyc
-%dir /persist/sys/%{name}
 %dir %{ACLerate_root}
 %{_bindir}/ACLerate
-%{ACLerate_root}/bin
+#%{ACLerate_root}/bin
 %{ACLerate_root}/SysdbProfiles
 %dir %{ACLerate_root}/doc
 %docdir %{ACLerate_root}/doc
