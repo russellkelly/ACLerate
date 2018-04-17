@@ -1,6 +1,6 @@
 [
     {
-	"command":"delete-acl",
+	"command":"add-rule",
 	"name":"ACLerate-ACL-test13",
 	"type":"IPv4",
 	"interface":"Ethernet13",
