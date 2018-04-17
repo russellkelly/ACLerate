@@ -118,10 +118,51 @@ no shut
 ```
 
 ## Usage Instructions
-4. Create the rules description file (with the JSON describing the rules to be initially added to the ACL) and copy to the switch.
-5. Create the configuration file which describes the ACL to be created and copy to  ```/mnt/flash/ACLerate-config.json```.  This file should reference the file in (4).  (Note that this step must happen after (4) but actually both (4) and (5) may be done before ACLerate is actually started, i.e. before (1-3).)
-6. Verify that ACLerate has processed the configuration and rules description files correctly and created the desired ACL on the switch by using “show” commands.  However, it should be noted that since this ACL was not created using the CLI, it will not appear in the running configuration.  Therefore, the ACL is visible only via ACL or platform “show” commands.
-7. The configuration file and the rules file can be updated to add new rules, delete rules, overwrite rules, delete the ACL or even add additional ACLs etc.  ACLerate should automatically detect any changes to the configuration file and respond accordingly.
+1. Create the rules description file (with the JSON describing the rules to be initially added to the ACL) and copy to the switch.
+2. Create the configuration file which describes the ACL to be created and copy to  ```/mnt/flash/ACLerate-config.json```.  This file should reference the rules description file in (1).  The addition of this file will be automatically detected with ACLerate.  Note that, alternatively, this file may be created before ACLerate is started; when ACLerate is initialising it checks for the existence of this file and attempts to process it.  Therefore, the relative ordering of adding this file and starting ACLerate is inconsequential.
+3. Verify that ACLerate has processed the files in (1) and (2) correctly and created the desired ACL on the switch by using commands such as ```show ip access-lists``` or platform-specific show commands.  However, it should be noted that, since this ACL was not created using the CLI, it will not appear in the running configuration. 
+4. The configuration file and the rules description file may be subsequently updated to add new rules, delete rules, overwrite rules, delete the ACL or even add additional ACLs etc.  ACLerate should automatically detect any changes to the configuration file and respond accordingly.  In order to prevent the read/write conflicts to these files (e.g. if the client is “badly behaved” and modifies the files quicker than ACLerate or the HW can process them), ACLerate locks these files while processing them.  Hence, the client should also attempt to individually lock the configuration file or rules description file before modifying them.  The ```fcntl flock()``` locking system calls should be used by the client to lock the files, as highlighted in the following Python excerpt: 
+```
+import fcntl
+ACLerate_config_file = '/mnt/flash/ACLerate-config.json'
+acl_config_file = open(ACLerate_config_file)
 
-## Debugging Instructions
+try:
+    fcntl.flock(acl_config_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except IOError:	
+    print "Could not lock file"
+    #Perhaps wait then reattempt locking?
+	
+#Have exclusive access to file here so safe to modify
+ 
+#Explicitly unlocking may be unnecessary; closing file implicitly unlocks it
+fcntl.flock(acl_config_file, fcntl.LOCK_UN)
+```
 
+
+## Debugging
+ACLerate logs information about salient events to ```/var/log/messages```, as illustrated by the following excerpt: 
+```
+Apr 12 10:30:38 DCS-7050T Launcher: %LAUNCHER-6-PROCESS_START: Configuring process 'ACLerate' to start in role 'ActiveSupervisor'
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Initialization starting
+Apr 12 10:30:39 DCS-7050T ACLerate.py: %AGENT-6-INITIALIZED: Agent 'ACLerate-ACLerate' initialized; pid=6016
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Initialization complete. Process initial configuration file(s)
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Attempting to process configuration file(s)
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Attempting to open, lock and parse /mnt/flash/ACLerate-config.json
+Apr 12 10:30:39 DCS-7050T ACLerate.py: /mnt/flash/ACLerate-config.json opened & locked successfully. Now parse
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Attempting to open, lock and parse /mnt/flash/ACLerate-rules.json
+Apr 12 10:30:39 DCS-7050T ACLerate.py: /mnt/flash/ACLerate-rules.json opened & locked successfully. Now parse
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Time to parse config files for ACL ACLerate-ACL-test13 is 0.00654101371765s
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Processing complete (30 rules).  Now commit ACL ACLerate-ACL-test13 to HW
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Attaching ACL ACLerate-ACL-test13 to interface Ethernet13 inbound
+Apr 12 10:30:39 DCS-7050T ACLerate.py: ACL programming success callback from HW
+Apr 12 10:30:39 DCS-7050T ACLerate.py: HW programming duration is 0.0240302085876s
+Apr 12 10:30:39 DCS-7050T ACLerate.py: Overall duration is 0.0305712223053s
+```
+
+Should an error occur, additional and more detailed information about the error encountered will be logged to ```/var/log/agents/ACLerate-<PID>```.  For example, if an invalid command is issued, the information logged to this file is along the lines of:
+```
+===== Output from /mnt/flash/ACLerate.py [] (PID=14618) started Apr 11 15:14:59.955878 ===
+'add-acl' is not a valid command
+Invalid ACL input data
+```
